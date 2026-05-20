@@ -22,8 +22,8 @@
 
   <!-- 背景圖層 (Background Modes 專屬) -->
   <div id="appBg" class="absolute inset-0 z-0 pointer-events-none hidden">
-    <!-- 優先讀取本地圖片，若無則使用線上備用圖片 -->
-    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('./DSM%208.0%20Desktop%20Wallpapers.jpg'), url('https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2070&auto=format&fit=crop');"></div>
+    <!-- 已修正為原本的 Unsplash 極光背景 -->
+    <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1677297680558-df5641e505ee?q=80&w=1828&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
     <div class="absolute inset-0 bg-black/40"></div>
   </div>
 
@@ -110,7 +110,7 @@
   <!-- 應用程式邏輯 -->
   <script>
     // --- 狀態變數 ---
-    let currentView = 'updating'; // 'updating' | 'countdown'
+    let currentView = 'updating';
     let currentStyle = 'styleA';
     let isTransitioning = false;
     let animFrame = null;
@@ -374,7 +374,6 @@
       
       isTransitioning = true;
 
-      // 觸發內容淡出與毛玻璃消散
       contentContainer.classList.replace('opacity-100', 'opacity-0');
       descContainer.classList.replace('opacity-100', 'opacity-0');
       glassLayer.style.backdropFilter = 'blur(0px)';
@@ -398,7 +397,6 @@
           animFrame = requestAnimationFrame(countdownLoop);
         }
 
-        // 觸發內容淡入與毛玻璃凝聚
         contentContainer.classList.replace('opacity-0', 'opacity-100');
         descContainer.classList.replace('opacity-0', 'opacity-100');
         glassLayer.style.backdropFilter = 'blur(30px)';
@@ -464,3 +462,4 @@
   </script>
 </body>
 </html>
+  
