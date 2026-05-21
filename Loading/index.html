@@ -133,8 +133,14 @@
        ➋ CSS Loader 樣式 (Clip-Path / SVG Circular Spinner)
        ========================================= */
     .general_spin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
       svg {
         width: var(--loader-size);
+        height: var(--loader-size);
+        display: block;
         transform-origin: center;
         animation: rotate var(--loader-time) linear infinite;
       }
