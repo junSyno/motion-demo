@@ -9,12 +9,11 @@
     :root {
       --loader-time: 2s;
       --loader-dash-time: 2s;
-      /* 修正：將旋轉與伸縮秒數設為一致，以保持無縫循環與固定起始點 */
-      --loader-size-num: 56;
-      --loader-size: calc(var(--loader-size-num) * 1px);
+      --loader-size: 56px;        /* SVG 尺寸 = 圈圈外緣直徑 */
       --loader-stroke-width: 3px;
-      --loader-stroke-color: #292929;
+      --loader-stroke-color: #353535;
       --loader-easing: cubic-bezier(0.4, 0, 0.2, 1);
+      --loader-stroke-linecap: round;
     }
 
     /* =========================================
@@ -148,8 +147,8 @@
       circle {
         fill: none;
         stroke: var(--loader-stroke-color);
-        stroke-width: calc(var(--loader-stroke-width) * 50 / var(--loader-size-num));
-        stroke-linecap: round;
+        stroke-width: var(--loader-stroke-width);
+        stroke-linecap: var(--loader-stroke-linecap);
         stroke-dasharray: 1, 360;
         stroke-dashoffset: 0;
         animation: dash var(--loader-dash-time) var(--loader-easing) infinite;
@@ -501,12 +500,21 @@
           <input type="number" id="inputStrokeWidth" min="1" max="15" value="3" step="0.5" />
         </div>
 
+        <!-- Stroke cap 切換 -->
+        <div class="setting-group">
+          <label>Stroke Cap</label>
+          <div class="preset-buttons" id="strokeCapSelector">
+            <button type="button" class="btn-preset active" data-cap="round">Round</button>
+            <button type="button" class="btn-preset" data-cap="square">Square</button>
+          </div>
+        </div>
+
         <!-- 顏色調整 -->
         <div class="setting-group">
           <label for="inputColor">Loader 顏色</label>
           <div class="color-picker-wrapper">
-            <input type="color" id="inputColor" value="#292929" />
-            <input type="text" id="inputColorText" value="#292929" maxlength="7" />
+            <input type="color" id="inputColor" value="#353535" />
+            <input type="text" id="inputColorText" value="#353535" maxlength="7" />
           </div>
         </div>
 
@@ -566,9 +574,8 @@
     <div id="pageFti" class="page-content">
       <div class="loader-container">
         <div class="general_spin">
-          <svg viewBox="0 0 50 50">
-            <!-- 關鍵就在這裡：加上 pathLength -->
-            <circle cx="25" cy="25" r="20" pathLength="360" />
+          <svg viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="26.5" pathLength="360" />
           </svg>
         </div>
       </div>
@@ -582,8 +589,8 @@
     <div id="pageLogin" class="page-content" style="display: none;">
       <button class="btn-login">
         <div class="general_spin">
-          <svg viewBox="0 0 50 50">
-            <circle cx="25" cy="25" r="20" pathLength="360" />
+          <svg viewBox="0 0 18 18">
+            <circle cx="9" cy="9" r="8" pathLength="360" />
           </svg>
         </div>
       </button>
@@ -612,7 +619,21 @@
         settingsPanel.classList.remove('show');
       });
 
-      // --- ➋ 控制元件宣告 ---
+      // --- ➋ 幾何更新：viewBox 1:1，r = size/2 − strokeWidth/2 ---
+      function updateSvgGeometry(size, strokeWidth) {
+        const half = size / 2;
+        const r    = half - strokeWidth / 2;
+        document.querySelectorAll('.general_spin svg').forEach(svg => {
+          svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+        });
+        document.querySelectorAll('.general_spin circle').forEach(circle => {
+          circle.setAttribute('cx', half);
+          circle.setAttribute('cy', half);
+          circle.setAttribute('r',  r);
+        });
+      }
+
+      // --- 控制元件宣告 ---
       const inputSeconds = document.getElementById('inputSeconds');
       const inputSize = document.getElementById('inputSize');
       const inputStrokeWidth = document.getElementById('inputStrokeWidth');
@@ -625,7 +646,8 @@
           seconds: 2.0,
           size: 56,
           strokeWidth: 3,
-          color: '#292929',
+          strokeCap: 'square',
+          color: '#353535',
           preset: 'ease-in-out',
           bezierText: '0.30, 0.00, 0.30, 1.00',
           bezierCoords: [0.30, 0.00, 0.30, 1.00]
@@ -634,6 +656,7 @@
           seconds: 2.0,
           size: 18,
           strokeWidth: 2,
+          strokeCap: 'round',
           color: '#ffffff',
           preset: 'ease-in-out',
           bezierText: '0.30, 0.00, 0.30, 1.00',
@@ -667,36 +690,40 @@
       // 2. 尺寸調整
       inputSize.addEventListener('input', () => {
         let val = parseFloat(inputSize.value);
-        if (!isNaN(val)) {
-          document.documentElement.style.setProperty('--loader-size-num', val);
+        if (!isNaN(val) && val > 0) {
+          document.documentElement.style.setProperty('--loader-size', val + 'px');
+          updateSvgGeometry(val, parseFloat(inputStrokeWidth.value));
           pageStates[currentPage].size = val;
         }
       });
 
       inputSize.addEventListener('change', () => {
         let val = parseFloat(inputSize.value);
-        if (isNaN(val) || val < 14) val = 14;
+        if (isNaN(val) || val < 4) val = 4;
         if (val > 150) val = 150;
         inputSize.value = val;
-        document.documentElement.style.setProperty('--loader-size-num', val);
+        document.documentElement.style.setProperty('--loader-size', val + 'px');
+        updateSvgGeometry(val, parseFloat(inputStrokeWidth.value));
         pageStates[currentPage].size = val;
       });
 
       // 3. 粗細調整
       inputStrokeWidth.addEventListener('input', () => {
         let val = parseFloat(inputStrokeWidth.value);
-        if (!isNaN(val)) {
+        if (!isNaN(val) && val > 0) {
           document.documentElement.style.setProperty('--loader-stroke-width', val + 'px');
+          updateSvgGeometry(parseFloat(inputSize.value), val);
           pageStates[currentPage].strokeWidth = val;
         }
       });
 
       inputStrokeWidth.addEventListener('change', () => {
         let val = parseFloat(inputStrokeWidth.value);
-        if (isNaN(val) || val < 1) val = 1;
+        if (isNaN(val) || val < 0.5) val = 0.5;
         if (val > 15) val = 15;
         inputStrokeWidth.value = val;
         document.documentElement.style.setProperty('--loader-stroke-width', val + 'px');
+        updateSvgGeometry(parseFloat(inputSize.value), val);
         pageStates[currentPage].strokeWidth = val;
       });
 
@@ -721,6 +748,17 @@
           inputColor.value = val;
           updateColor(val);
         }
+      });
+
+      // 5. Stroke cap 切換
+      const strokeCapSelector = document.getElementById('strokeCapSelector');
+      strokeCapSelector.querySelectorAll('.btn-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cap = btn.getAttribute('data-cap');
+          document.documentElement.style.setProperty('--loader-stroke-linecap', cap);
+          pageStates[currentPage].strokeCap = cap;
+          strokeCapSelector.querySelectorAll('.btn-preset').forEach(b => b.classList.toggle('active', b === btn));
+        });
       });
 
       // --- ➍ 可拖曳貝氏曲線編輯器 (Pointer Events) ---
@@ -968,9 +1006,11 @@
         const timeStr = pageStates[page].seconds + 's';
         document.documentElement.style.setProperty('--loader-time', timeStr);
         document.documentElement.style.setProperty('--loader-dash-time', timeStr);
-        document.documentElement.style.setProperty('--loader-size-num', pageStates[page].size);
+        document.documentElement.style.setProperty('--loader-size', pageStates[page].size + 'px');
         document.documentElement.style.setProperty('--loader-stroke-width', pageStates[page].strokeWidth + 'px');
+        updateSvgGeometry(pageStates[page].size, pageStates[page].strokeWidth);
         document.documentElement.style.setProperty('--loader-stroke-color', pageStates[page].color);
+        document.documentElement.style.setProperty('--loader-stroke-linecap', pageStates[page].strokeCap);
 
         // 3. 切換頁面選擇按鈕的 active 樣式
         pageSelector.querySelectorAll('.btn-preset').forEach(btn => {
@@ -985,7 +1025,12 @@
         document.getElementById('pageFti').style.display = (page === 'fti' ? 'flex' : 'none');
         document.getElementById('pageLogin').style.display = (page === 'login' ? 'flex' : 'none');
 
-        // 5. 切換動態曲線 Preset 與貝氏曲線繪製
+        // 5. 同步 Stroke Cap 按鈕 active 狀態
+        strokeCapSelector.querySelectorAll('.btn-preset').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-cap') === pageStates[page].strokeCap);
+        });
+
+        // 6. 切換動態曲線 Preset 與貝氏曲線繪製
         setActivePreset(pageStates[page].preset);
 
         // 如果是 custom 模式，另外調用 setBezierCoords 以防 inputBezierText.value 的值被 parse
